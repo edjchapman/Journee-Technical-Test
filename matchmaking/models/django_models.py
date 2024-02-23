@@ -8,7 +8,7 @@ from django.db import models
 from django.db.models import QuerySet
 
 if TYPE_CHECKING:
-    from .tm_form import TripParameters
+    from matchmaking.tm_form import TripParameters
 
 
 # This data exists to support our matchmaking algorithm
@@ -55,10 +55,14 @@ class Shell(models.Model):
     # Relationships
     destination = models.ForeignKey("matchmaking.Destination", on_delete=models.PROTECT)
     flying_to_city = models.ForeignKey(
-        "matchmaking.City", on_delete=models.PROTECT, related_name="shells_flying_to_city"
+        "matchmaking.City",
+        on_delete=models.PROTECT,
+        related_name="shells_flying_to_city",
     )
     flying_back_from_city = models.ForeignKey(
-        "matchmaking.City", on_delete=models.PROTECT, related_name="shells_flying_back_from_city"
+        "matchmaking.City",
+        on_delete=models.PROTECT,
+        related_name="shells_flying_back_from_city",
     )
 
     # Fields
@@ -189,7 +193,7 @@ class ItineraryManager(models.Manager["Itinerary"]):
         self, trip_params: TripParameters
     ) -> QuerySet[Itinerary]:
         # This is here to prevent circular imports
-        from .matchmaking import ItineraryFilters
+        from ..matchmaking import ItineraryFilters
 
         filters = ItineraryFilters(qs=self.model.objects.all())
 
