@@ -3,3 +3,4 @@ psycopg2-binary==2.9.9
 black==23.12.1
 mypy==1.8.0
 django-stubs==4.2.7
+factory-boy==3.3.0
