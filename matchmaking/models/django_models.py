@@ -193,7 +193,7 @@ class ItineraryManager(models.Manager["Itinerary"]):
         self, trip_params: TripParameters
     ) -> QuerySet[Itinerary]:
         # This is here to prevent circular imports
-        from ..matchmaking import ItineraryFilters
+        from matchmaking.filters.django_matchmaking import ItineraryFilters
 
         filters = ItineraryFilters(qs=self.model.objects.all())
 

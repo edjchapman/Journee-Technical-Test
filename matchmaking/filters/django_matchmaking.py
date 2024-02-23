@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING
 
 from django.db.models import Q, QuerySet, Sum
 
-from .models import ExperienceThemes, Itinerary
+from matchmaking.models import ExperienceThemes, Itinerary
 
 if TYPE_CHECKING:
-    from .tm_form import TmFormRatings, TripParameters
+    from matchmaking.tm_form import TmFormRatings, TripParameters
 
 
 # This is a excerpt of what our matchmaking algorithm is doing
