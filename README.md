@@ -22,3 +22,10 @@ Tested with Python 3.11.
 `black` is used for code formatting
 
 `mypy` is used for static analysis
+
+## Testing
+
+Run tests
+```shell
+pytest
+```
