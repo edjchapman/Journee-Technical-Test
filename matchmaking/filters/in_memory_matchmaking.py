@@ -1,6 +1,6 @@
 from typing import List
 
-from matchmaking.models import ItineraryData
+from matchmaking.models import ItineraryData, Experience
 from matchmaking.tm_form import TripParameters
 
 
@@ -36,6 +36,23 @@ class InMemoryItineraryFilters:
                 for experience in itinerary.experiences
             )
         ]
+
+    def filter_severe_dietary_exclusions(self, dietary: list[str]) -> None:
+        if Experience.DietaryRequirement.OTHER_SEVERE not in dietary:
+            # If the severe dietary restriction isn't present, no need to exclude any itineraries.
+            return
+        food_experience_types_names = {"Food tour & tastings", "Dining experience"}
+        non_food_related_itineraries = []
+
+        for itinerary in self.itineraries:
+            if all(
+                experience_type.name not in food_experience_types_names
+                for experience in itinerary.experiences
+                for experience_type in experience.experience_types
+            ):
+                non_food_related_itineraries.append(itinerary)
+
+        self.itineraries = non_food_related_itineraries
 
     def filter_itinerary_pace(self, pace: int) -> None:
         suitable_itineraries = []
@@ -99,6 +116,9 @@ class InMemoryItineraryFilters:
         self.filter_itinerary_pace(
             pace=trip_params.pace,
         )
+
+        # Filter: Severe dietary exclusions
+        self.filter_severe_dietary_exclusions(dietary=trip_params.dietary)
 
         # Filter: explicitly excluded locations
         self.filter_location_exclusions(

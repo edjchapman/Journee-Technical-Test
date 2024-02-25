@@ -1,6 +1,7 @@
 import pytest
 
 from matchmaking.filters.in_memory_matchmaking import InMemoryItineraryFilters
+from matchmaking.models import Experience
 from matchmaking.tests.factories.in_memory_models import (
     ItineraryDataFactory,
     ExperienceDataFactory,
@@ -8,6 +9,7 @@ from matchmaking.tests.factories.in_memory_models import (
     DestinationDataFactory,
     CityDataFactory,
     CountryDataFactory,
+    ExperienceTypeDataFactory,
 )
 
 
@@ -161,3 +163,49 @@ def test_filter_location_exclusions():
     itinerary_filter = InMemoryItineraryFilters(itineraries=itineraries)
     itinerary_filter.filter_location_exclusions(location_exclusions=["NYC"])
     assert len(itinerary_filter.itineraries) == 0
+
+
+def test_filter_severe_dietary_exclusions():
+    itineraries = [
+        ItineraryDataFactory(
+            experiences=[
+                ExperienceDataFactory(
+                    experience_types=[
+                        ExperienceTypeDataFactory(name="Food tour & tastings")
+                    ]
+                )
+            ]
+        ),
+        ItineraryDataFactory(
+            experiences=[
+                ExperienceDataFactory(
+                    experience_types=[ExperienceTypeDataFactory(name="Mountain Biking")]
+                )
+            ]
+        ),
+    ]
+    itinerary_filter = InMemoryItineraryFilters(itineraries=itineraries)
+
+    # Case 1: Apply a filter with severe dietary restriction present
+    itinerary_filter.filter_severe_dietary_exclusions(
+        dietary=[Experience.DietaryRequirement.OTHER_SEVERE]
+    )
+    assert (
+        len(itinerary_filter.itineraries) == 1
+    ), "Should only include itineraries without food-related experiences"
+
+    # Verify that the remaining itinerary is the one without food-related experiences.
+    assert all(
+        experience_type.name != "Food tour & tastings"
+        and experience_type.name != "Dining experience"
+        for itinerary in itinerary_filter.itineraries
+        for experience in itinerary.experiences
+        for experience_type in experience.experience_types
+    ), "The remaining itineraries should not contain food-related experiences"
+
+    # Case 2: Apply the filter without severe dietary restriction present
+    itinerary_filter.itineraries = itineraries  # Reset itineraries to initial state
+    itinerary_filter.filter_severe_dietary_exclusions(dietary=[])
+    assert len(itinerary_filter.itineraries) == len(
+        itineraries
+    ), "No itineraries should be excluded if no severe dietary restriction is present"
