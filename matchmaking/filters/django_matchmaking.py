@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from django.db.models import Q, QuerySet, Sum
 
-from matchmaking.models import ExperienceThemes, Itinerary
+from matchmaking.models import ExperienceThemes, Itinerary, Experience
 
 if TYPE_CHECKING:
     from matchmaking.tm_form import TmFormRatings, TripParameters
@@ -69,6 +69,19 @@ class ItineraryFilters:
                     continue
 
         self._run_filter(query=~Q(id__in=excluded_itinerary_ids))
+
+    def filter_severe_dietary_exclusions(self, dietary: list[str]) -> None:
+        if Experience.DietaryRequirement.OTHER_SEVERE not in dietary:
+            # If the severe dietary restriction isn't present, no need to exclude any itineraries.
+            return
+
+        food_experience_types_names = {"Food tour & tastings", "Dining experience"}
+
+        self._run_filter(
+            query=~Q(
+                experiences__experience_types__name__in=food_experience_types_names
+            )
+        )
 
     def dining_experiences_solo_travellers(self, num_travellers: int) -> None:
         excluded_itinerary_ids = set()
@@ -155,6 +168,9 @@ class ItineraryFilters:
         self.experience_theme_minimum_ratings(
             ratings=trip_params.ratings.normalised_rounded,
         )
+
+        # Filter: Severe dietary exclusions
+        self.filter_severe_dietary_exclusions(dietary=trip_params.dietary)
 
         # Filter: experience dietary requirements
         self.experiences_dietary_requirements(
